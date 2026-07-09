@@ -1,0 +1,312 @@
+{
+  "name": "AI-Appointment-Booking-System",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "appointment-booking",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "d31e178f-b9c3-4521-81dd-26b74ea6fd2a",
+      "name": "Webhook",
+      "webhookId": "9d69df17-b837-4fbf-8503-a6c2afb3533f"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "calendar": {
+          "__rl": true,
+          "value": "afiimalik67@gmail.com",
+          "mode": "list",
+          "cachedResultName": "afiimalik67@gmail.com"
+        },
+        "returnAll": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        208,
+        0
+      ],
+      "id": "e7fdeb79-c2b0-4a35-a876-37a3b6a73718",
+      "name": "Get many events",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "r1rgsx7XsJS797Vr",
+          "name": "Google Calendar OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nconst events = $input.all();\n\nconst busySlots = events.map(event => {\n  return {\n    title: event.json.summary,\n    start: event.json.start.dateTime || event.json.start.date,\n    end: event.json.end.dateTime || event.json.end.date,\n  };\n});\n\nreturn [\n  {\n    json: {\n      busySlots\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        416,
+        0
+      ],
+      "id": "19af3f0f-5867-4dc8-a39a-47f2e5530d94",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nconst busySlots = $input.first().json.busySlots;\n\nconst html = `\n<!DOCTYPE html>\n<html>\n<head>\n<title>Appointment Booking</title>\n\n<style>\nbody{\nfont-family:Arial,sans-serif;\nbackground:#f4f7fb;\npadding:40px;\n}\n\n.container{\nmax-width:600px;\nmargin:auto;\nbackground:white;\npadding:30px;\nborder-radius:12px;\nbox-shadow:0 8px 20px rgba(0,0,0,.1);\n}\n\nh1{\ntext-align:center;\n}\n\ninput,select{\nwidth:100%;\npadding:12px;\nmargin-top:10px;\nmargin-bottom:20px;\nborder:1px solid #ddd;\nborder-radius:8px;\n}\n\nbutton{\nwidth:100%;\npadding:14px;\nbackground:#2563eb;\ncolor:white;\nborder:none;\nborder-radius:8px;\nfont-size:16px;\ncursor:pointer;\n}\n\nbutton:hover{\nbackground:#1d4ed8;\n}\n</style>\n\n</head>\n\n<body>\n\n<div class=\"container\">\n\n<h1>Book Appointment</h1>\n\n<form method=\"POST\" action=\"https://afaqkhan67.app.n8n.cloud/webhook/appointment-booking-submit\">\n\n<label>Name</label>\n<input name=\"name\" required>\n\n<label>Email</label>\n<input type=\"email\" name=\"email\" required>\n\n<label>Select Busy Slot (Demo)</label>\n\n<select name=\"slot\">\n\n${busySlots.map(slot=>`\n<option>\n${slot.title} |\n${slot.start} →\n${slot.end}\n</option>\n`).join(\"\")}\n\n</select>\n\n<button type=\"submit\">\nBook Appointment\n</button>\n\n</form>\n\n</div>\n\n</body>\n</html>\n`;\n\nreturn [\n{\njson:{\nhtml\n}\n}\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        624,
+        0
+      ],
+      "id": "029fcf07-1c9b-4a69-8c8b-5cc2a8221f8e",
+      "name": "Build HTML Form"
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.html }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "text/html"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        832,
+        0
+      ],
+      "id": "dd5066f0-a2f7-47d8-9f0f-5ada2525741b",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "appointment-booking-submit",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        352,
+        144
+      ],
+      "id": "c5ff359f-98a4-42f7-ab40-827afdfd4a60",
+      "name": "Webhook1",
+      "webhookId": "09a10056-eb7b-49ea-91c5-137939f34834"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nconst body = $input.first().json.body || {};\n\nreturn [\n  {\n    json: {\n      name: body.name,\n      email: body.email,\n      slot: body.slot\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        560,
+        144
+      ],
+      "id": "8bdd6809-1c0b-402f-827b-c5d24f90c008",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "afiimalik67@gmail.com",
+          "mode": "list",
+          "cachedResultName": "afiimalik67@gmail.com"
+        },
+        "additionalFields": {
+          "attendees": [
+            "={{$json.email}}"
+          ],
+          "description": "=Customer Name: {{$json.name}}  Customer Email: {{$json.email}}",
+          "summary": "=Appointment with {{$json.name}}"
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        768,
+        144
+      ],
+      "id": "542d5fa0-3dc0-4309-bdd9-cccbfdd10265",
+      "name": "Create an event",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "r1rgsx7XsJS797Vr",
+          "name": "Google Calendar OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Code in JavaScript1').item.json.email }}",
+        "subject": "Appointment Confirmed 🎉",
+        "message": "=<h2>Your Appointment is Confirmed 🎉</h2>  <p>Hello <b>{{$json.name}}</b>,</p>  <p>Your appointment has been booked successfully.</p>  <p>Thank you for choosing us.</p>  <hr>  <p>Regards,<br> AI Appointment Booking System</p>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        976,
+        144
+      ],
+      "id": "f62290d5-aaf0-49c0-ae65-395fa8738190",
+      "name": "Send a message",
+      "webhookId": "b3be4a66-f3de-4ff3-bc8f-a2fbd6bee2b9",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "I0EB7LUV0Jbh5hOQ",
+          "name": "Gmail account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "<h2>✅ Appointment Booked Successfully</h2>\n\n<p>Thank you for booking.</p>\n\n<p>Your Google Calendar event has been created.</p>\n\n<p>A confirmation email has been sent.</p>\n\n<p>You will be redirected in <strong>3 seconds...</strong></p>\n\n<a href=\"https://afaqkhan67.app.n8n.cloud/webhook/appointment-booking\">\n    <button style=\"padding:12px 20px;border:none;background:#2563eb;color:#fff;border-radius:8px;cursor:pointer;\">\n        Book Another Appointment\n    </button>\n</a>\n\n<script>\nsetTimeout(() => {\n    window.location.href = \"https://afaqkhan67.app.n8n.cloud/webhook/appointment-booking\";\n}, 3000);\n</script>",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "text/html"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1184,
+        144
+      ],
+      "id": "73494200-5344-4a3d-8aa2-4442bdb9c56f",
+      "name": "Respond to Webhook1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Get many events",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many events": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Build HTML Form",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build HTML Form": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Create an event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create an event": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "dbe56e31-9df4-48cf-a0b7-44e8845df86c",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "6fd7ce1e08e4cb54dbd88e63b0006804cd9bf63e9002a0ee6d78c9df9d547841"
+  },
+  "nodeGroups": [],
+  "id": "9Ql44xUm5SgO0MXs",
+  "tags": []
+}
